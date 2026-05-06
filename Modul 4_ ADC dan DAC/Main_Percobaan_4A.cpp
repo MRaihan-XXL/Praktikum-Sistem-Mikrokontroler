@@ -1,42 +1,54 @@
-// Percobaan 4A: ADC untuk mengontrol posisi servo
-#include <Servo.h>          // library untuk servo [3]
+#include <Servo.h> // library untuk servo motor
 
-Servo myservo;              // buat objek servo
+Servo myservo; // membuat objek servo
 
-const int potensioPin = A0; // potensiometer di pin A0 [2]
-const int servoPin = 9;     // servo di pin 9 (PWM) [5]
+// ===================== PIN SETUP =====================
+// Tentukan pin yang digunakan untuk potensiometer dan servo
+const int potensioPin = ;   // isi pin analog input (contoh A0)
+const int servoPin = ;      // isi pin digital untuk servo (PWM)
 
-int val = 0;   // menyimpan nilai ADC (0-1023)
-int pos = 0;   // menyimpan sudut servo (0-180)
+// ===================== VARIABEL =====================
+// Variabel untuk menyimpan data ADC dan sudut servo
+int pos = ; // isi dengan tipe data dan inisialisasi awal
+int val = ; // isi dengan tipe data dan inisialisasi awal
 
 void setup() {
 
-    myservo.attach(servoPin);   // hubungkan servo ke pin 9 [3]
+  // Hubungkan servo ke pin yang sudah ditentukan
+  myservo.attach(); // isi dengan servoPin
 
-    Serial.begin(9600);         // komunikasi serial untuk monitoring [4]
+  // Aktifkan komunikasi serial untuk monitoring
+  Serial.begin(); // isi baud rate (contoh 9600)
 
 }
 
 void loop() {
-    // Baca nilai analog dari potensiometer (0-1023) [2]
-    val = analogRead(potensioPin);
-    
-    // Mapping nilai ADC ke sudut servo (0-180 derajat) [4]
-    pos = map(val, 
-                0, 
-                1023, 
-                0, 
-                180);
-    
-    // Gerakkan servo ke posisi yang sudah dipetakan [3]
-    myservo.write(pos);
-    
-    // Tampilkan data ke Serial Monitor [5]
-    Serial.print("ADC Potensio: ");
-    Serial.print(val);
-  
-    Serial.print(" | Sudut Servo: ");
-    Serial.println(pos);
-    
-    delay(100);  // delay 100 ms untuk stabilisasi servo (tanpa jitter)
+
+  // ===================== PEMBACAAN ADC =====================
+  // Baca nilai dari potensiometer (rentang 0–1023)
+  val = analogRead(); // isi dengan potensioPin
+
+  // ===================== KONVERSI DATA =====================
+  // Ubah nilai ADC menjadi sudut servo (0–180 derajat)
+  pos = map(val,
+             0,   	// isi nilai minimum ADC
+             1023,  // isi nilai maksimum ADC
+             0,   	// isi sudut minimum servo
+             180);  // isi sudut maksimum servo
+
+  // ===================== OUTPUT SERVO =====================
+  // Gerakkan servo sesuai hasil mapping
+  myservo.write(); // isi dengan variabel sudut
+
+  // ===================== MONITORING DATA =====================
+  // Tampilkan data ADC dan sudut servo ke Serial Monitor
+  Serial.print("ADC Potensio: ");
+  Serial.print(); // isi variabel ADC
+
+  Serial.print(" | Sudut Servo: ");
+  Serial.println(); // isi variabel sudut
+
+  // ===================== STABILISASI =====================
+  // Delay untuk memberi waktu servo bergerak stabil
+  delay(100); // isi dalam milidetik
 }
