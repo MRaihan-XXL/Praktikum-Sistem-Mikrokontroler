@@ -2,13 +2,13 @@
 
 // ===================== PIN SETUP =====================
 // Tentukan pin yang digunakan untuk potensiometer dan LED PWM
-const int potPin = ;   // isi dengan pin analog (contoh A0)
-const int ledPin = ;   // isi dengan pin digital PWM (contoh 9)
+const int potPin = A0;   // isi dengan pin analog (contoh A0)
+const int ledPin = 9;   // isi dengan pin digital PWM (contoh 9)
 
 // ===================== VARIABEL =====================
 // Variabel untuk menyimpan hasil pembacaan dan konversi PWM
-int nilaiADC = ;  // isi dengan nilai awal (default 0)
-int pwm = ;       // isi dengan nilai awal (default 0)
+int nilaiADC = 0;  // isi dengan nilai awal (default 0)
+int pwm = 0;       // isi dengan nilai awal (default 0)
 
 void setup() {
 
@@ -18,36 +18,36 @@ void setup() {
 
   // ===================== SERIAL MONITOR =====================
   // Aktifkan komunikasi serial untuk melihat data pembacaan
-  Serial.begin(); // isi baud rate (contoh 9600)
+  Serial.begin(9600); // isi baud rate (contoh 9600)
 }
 
 void loop() {
 
   // ===================== PEMBACAAN SENSOR =====================
   // Baca nilai analog dari potensiometer (rentang 0–1023)
-  nilaiADC = analogRead(); // isi dengan potPin
+  nilaiADC = analogRead(potPin); // isi dengan potPin
 
   // ===================== PEMROSESAN DATA (SCALING) =====================
   // Ubah nilai ADC (0–1023) menjadi nilai PWM (0–255)
   pwm = map(nilaiADC,
-            ,   // isi nilai minimum ADC
-            ,   // isi nilai maksimum ADC
-            ,   // isi PWM minimum
-            );  // isi PWM maksimum
+            0,   // isi nilai minimum ADC
+            1023,   // isi nilai maksimum ADC
+            0,   // isi PWM minimum
+            255);  // isi PWM maksimum
 
   // ===================== OUTPUT PWM =====================
   // Kirim sinyal PWM ke LED (mengatur kecerahan)
-  analogWrite(ledPin, ); // isi dengan variabel PWM
+  analogWrite(ledPin, pwm); // isi dengan variabel PWM
 
   // ===================== MONITORING DATA =====================
   // Tampilkan data ADC dan PWM ke Serial Monitor
   Serial.print("ADC: ");
-  Serial.print(); // isi variabel ADC
+  Serial.print(nilaiADC); // isi variabel ADC
 
   Serial.print(" | PWM: ");
-  Serial.println(); // isi variabel PWM
+  Serial.println(pwm); // isi variabel PWM
 
   // ===================== STABILISASI SISTEM =====================
   // Delay untuk menstabilkan pembacaan dan tampilan data
-  delay(); // isi dalam milidetik (contoh 50)
+  delay(50); // isi dalam milidetik (contoh 50)
 }
