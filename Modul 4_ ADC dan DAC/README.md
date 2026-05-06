@@ -77,60 +77,65 @@ void loop() {
 
 2. Apa hubungan antara nilai ADC (0–1023) dan nilai PWM (0–255)?
 
-> Potensiometer tetap berfungsi, tetapi arah putaran menjadi terbalik. Artinya, jika diputar searah jarum jam biasanya nilai ADC naik (0→1023), setelah tertukar akan turun (1023→0). Secara teknis tidak merusak, hanya membalik skala. Nilai maksimum dan minimum tetap sama (0 dan 1023). Untuk aplikasi yang menginginkan arah tertentu (misal kanan = naik), perlu disesuaikan.
+> Hubungannya adalah proporsional linear. ADC membaca tegangan analog 0-5V menghasilkan nilai 0-1023. Nilai ini kemudian dipetakan ke rentang PWM 0-255 menggunakan fungsi map() karena resolusi PWM hanya 8-bit (255 level), sedangkan ADC 10-bit (1023 level). 
 
 3. Modifikasilah program berikut agar LED hanya menyala pada rentang kecerahan sedang, yaitu hanya ketika nilai PWM berada pada rentang 50 sampai 200. Jelaskan program pada file README.md.
 
 ```c++
-// Modifikasi 3B: Tampilan ke Serial Monitor dan LCD dengan format rapi
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <Arduino.h>
+#include <Arduino.h> // library dasar Arduino (tidak wajib diubah)
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-const int pinPot = A0;
+// ===================== PIN SETUP =====================
+// Tentukan pin yang digunakan untuk potensiometer dan LED PWM
+const int potPin = A0;   // isi dengan pin analog (contoh A0)
+const int ledPin = 9;   // isi dengan pin digital PWM (contoh 9)
+
+// ===================== VARIABEL =====================
+// Variabel untuk menyimpan hasil pembacaan dan konversi PWM
+int nilaiADC = 0;  // isi dengan nilai awal (default 0)
+int pwm = 0;       // isi dengan nilai awal (default 0)
 
 void setup() {
-    Serial.begin(9600);
-    lcd.init();
-    lcd.backlight();
+
+  // ===================== OUTPUT SETUP =====================
+  // Atur pin LED sebagai output
+  pinMode(ledPin, );
+
+  // ===================== SERIAL MONITOR =====================
+  // Aktifkan komunikasi serial untuk melihat data pembacaan
+  Serial.begin(9600); // isi baud rate (contoh 9600)
 }
 
 void loop() {
-    int nilaiADC = analogRead(pinPot);
-    if (nilaiADC < 1) nilaiADC = 1;   // hindari pembagian nol (opsional)
-    
-    float tegangan = (nilaiADC / 1023.0) * 5.0;
-    int persen = map(nilaiADC, 0, 1023, 0, 100);
-    
-    // --- Serial Monitor format sesuai tabel (UART) ---
-    Serial.print("ADC: ");
-    Serial.print(nilaiADC);
-    Serial.print(" Volt: ");
-    Serial.print(tegangan, 2);
-    Serial.print(" V Persen: ");
-    Serial.print(persen);
-    Serial.println("%");
-    
-    // --- LCD baris 1: "ADC: nilai persen%" (I2C) ---
-    lcd.setCursor(0, 0);
-    lcd.print("ADC: ");
-    lcd.print(nilaiADC);
-    lcd.print(" ");
-    lcd.print(persen);
-    lcd.print("%   ");   // hapus sisa karakter
-    
-    // --- LCD baris 2: bar grafis (I2C) ---
-    int panjangBar = map(nilaiADC, 0, 1023, 0, 16);
-    lcd.setCursor(0, 1);
-    for (int i = 0; i < 16; i++) {
-        if (i < panjangBar) {
-            lcd.print((char)255);   // blok
-        } else {
-            lcd.print(" ");
-        }
-    }
-    
-    delay(200);
+
+  // ===================== PEMBACAAN SENSOR =====================
+  // Baca nilai analog dari potensiometer (rentang 0–1023)
+  nilaiADC = analogRead(potPin); // isi dengan potPin
+
+  // ===================== PEMROSESAN DATA (SCALING) =====================
+  // Ubah nilai ADC (0–1023) menjadi nilai PWM (0–255)
+  pwm = map(nilaiADC,
+            0,   // isi nilai minimum ADC
+            1023,   // isi nilai maksimum ADC
+            0,   // isi PWM minimum
+            255);  // isi PWM maksimum
+
+  // ===================== OUTPUT PWM =====================
+  if (pwm >= 50 && pwm <= 200){ //ketika nilai pwm 50-200
+  	analogWrite(ledPin, pwm);   // led menyala sesuai pwm
+  } else {
+	analogWrite(ledPin, 0);       // led mati 
+  }
+
+  // ===================== MONITORING DATA =====================
+  // Tampilkan data ADC dan PWM ke Serial Monitor
+  Serial.print("ADC: ");
+  Serial.print(nilaiADC); // isi variabel ADC
+
+  Serial.print(" | PWM: ");
+  Serial.println(pwm); // isi variabel PWM
+
+  // ===================== STABILISASI SISTEM =====================
+  // Delay untuk menstabilkan pembacaan dan tampilan data
+  delay(50); // isi dalam milidetik (contoh 50)
 }
 ```
