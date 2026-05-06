@@ -4,21 +4,21 @@ Servo myservo; // membuat objek servo
 
 // ===================== PIN SETUP =====================
 // Tentukan pin yang digunakan untuk potensiometer dan servo
-const int potensioPin = ;   // isi pin analog input (contoh A0)
-const int servoPin = ;      // isi pin digital untuk servo (PWM)
+const int potensioPin = A0;  // isi pin analog input (contoh A0)
+const int servoPin = 9;      // isi pin digital untuk servo (PWM)
 
 // ===================== VARIABEL =====================
 // Variabel untuk menyimpan data ADC dan sudut servo
-int pos = ; // isi dengan tipe data dan inisialisasi awal
-int val = ; // isi dengan tipe data dan inisialisasi awal
+int pos = 0; // isi dengan tipe data dan inisialisasi awal
+int val = 0; // isi dengan tipe data dan inisialisasi awal
 
 void setup() {
 
   // Hubungkan servo ke pin yang sudah ditentukan
-  myservo.attach(); // isi dengan servoPin
+  myservo.attach(servoPin); // isi dengan servoPin
 
   // Aktifkan komunikasi serial untuk monitoring
-  Serial.begin(); // isi baud rate (contoh 9600)
+  Serial.begin(9600); // isi baud rate (contoh 9600)
 
 }
 
