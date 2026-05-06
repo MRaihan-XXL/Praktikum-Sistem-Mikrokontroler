@@ -11,9 +11,9 @@ int pos = 0;   // menyimpan sudut servo (0-180)
 
 void setup() {
 
-  myservo.attach(servoPin);   // hubungkan servo ke pin 9 [3]
+    myservo.attach(servoPin);   // hubungkan servo ke pin 9 [3]
 
-  Serial.begin(9600);         // komunikasi serial untuk monitoring [4]
+    Serial.begin(9600);         // komunikasi serial untuk monitoring [4]
 
 }
 
