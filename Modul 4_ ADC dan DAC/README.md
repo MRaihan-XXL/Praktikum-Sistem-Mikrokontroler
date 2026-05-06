@@ -44,7 +44,7 @@ void loop() {
   val = analogRead(); // isi dengan potensioPin
 
   // ===================== KONVERSI DATA =====================
-  // Ubah nilai ADC menjadi sudut servo (0–180 derajat)
+  // Ubah nilai ADC menjadi sudut servo (30–150 derajat)
   pos = map(val,
              0,   	// isi nilai minimum ADC
              1023,  // isi nilai maksimum ADC
