@@ -139,3 +139,13 @@ void loop() {
   delay(50); // isi dalam milidetik (contoh 50)
 }
 ```
+
+## Dokumentasi
+
+1. Percobaan 4A: Analog to Digital Converter (ADC)
+
+![Percobaan 4A](Dokumentasi_Percobaan_4A.jpg)
+
+2. Percobaan 4B: Pulse Width Modulation (PWM)
+
+![Percobaan 4B](Dokumentasi_Percobaan_4A.jpg)
