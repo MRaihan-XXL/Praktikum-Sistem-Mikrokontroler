@@ -1,6 +1,6 @@
-# Pertemuan 4
+# Pertemuan 5
 
-## 4.5.4 Percobaan 4A: Analog to Digital Converter (ADC)
+## 5.5.4 Percobaan 5A: Multitasking dengan FreeRTOS (LED + Potensiometer)
 
 1. Apa fungsi perintah analogRead() pada rangkaian praktikum ini?
 
@@ -69,7 +69,7 @@ void loop() {
 }
 ```
 
-## 4.6.4 Percobaan 4B: Pulse Width Modulation (PWM)
+## 5.6.4 Percobaan 5B: Komunikasi Task dengan Queue
 
 1. Jelaskan mengapa LED dapat diatur kecerahannya menggunakan fungsi analogWrite()!
 
