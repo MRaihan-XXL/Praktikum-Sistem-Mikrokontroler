@@ -16,7 +16,31 @@
 > 3. Di dalam setup(), panggil xTaskCreate(TaskBaru, "task4", 128, NULL, 1, NULL).
 > 4. Pastikan stack size (128) cukup untuk task baru. Jika tidak, tingkatkan (misal 256).
 > 5. Upload ulang program.
+> 
 > Contoh task keempat untuk menyalakan LED di pin 6 setiap 700 ms:
+```c++
+#include <Servo.h> // library untuk servo motor
+
+Servo myservo; // membuat objek servo
+
+// ===================== PIN SETUP =====================
+// Tentukan pin yang digunakan untuk potensiometer dan servo
+const int potensioPin = A0;  // isi pin analog input (contoh A0)
+const int servoPin = 9;      // isi pin digital untuk servo (PWM)
+
+// ===================== VARIABEL =====================
+// Variabel untuk menyimpan data ADC dan sudut servo
+int pos = 0; // isi dengan tipe data dan inisialisasi awal
+int val = 0; // isi dengan tipe data dan inisialisasi awal
+
+void setup() {
+
+  // Hubungkan servo ke pin yang sudah ditentukan
+  myservo.attach(servoPin); // isi dengan servoPin
+
+  // Aktifkan komunikasi serial untuk monitoring
+  Serial.begin(9600); // isi baud rate (contoh 9600)
+```
 
 3. Modifikasi program berikut agar servo hanya bergerak dalam rentang 30° hingga 150°, meskipun potensiometer tetap memiliki rentang ADC 0–1023. Jelaskan program pada file README.md 
 
