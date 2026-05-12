@@ -5,6 +5,7 @@
 1. Apakah ketiga task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
 
 > Ketiga task berjalan secara bergantian (concurrent), bukan bersamaan (paralel murni) karena Arduino Uno hanya memiliki satu inti prosesor. Mekanismenya diatur oleh scheduler FreeRTOS. Scheduler membagi waktu prosesor secara bergantian ke setiap task dalam waktu yang sangat singkat. Ketika suatu task memanggil vTaskDelay(), task tersebut masuk ke status blocked dan scheduler langsung beralih ke task lain yang siap berjalan. Karena pergantian task terjadi sangat cepat, efeknya terlihat seolah semua task berjalan bersamaan.
+> 
 > Pada program ini, ketiga task memiliki prioritas yang sama (prioritas 1). Scheduler menggunakan skema round‑robin dengan time slicing, sehingga setiap task mendapat jatah waktu eksekusi secara bergantian.
 
 2. Mengapa diperlukan fungsi map() dalam program tersebut?
