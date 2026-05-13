@@ -130,65 +130,57 @@ Jika dua task mencoba mengirim ke queue secara bersamaan, mekanisme internal que
 
 3. Modifikasilah program dengan menggunakan sensor DHT sesungguhnya sehingga informasi yang ditampilkan dinamis. Bagaimana hasilnya? Jelaskan program pada file README.md.
 
-> Hasil modifikasi (menggunakan sensor DHT11) menghasilkan pembacaan suhu dan kelembaban secara dinamis sesuai kondisi lingkungan [2]. Program:
+> Hasil modifikasi (menggunakan sensor DHT11) menghasilkan pembacaan suhu dan kelembaban secara dinamis sesuai kondisi lingkungan. Program:
 
 ```c++
-#include <Arduino.h> // library dasar Arduino (tidak wajib diubah)
+#include <Arduino_FreeRTOS.h>
+#include <queue.h>
+#include <DHT.h>
 
-// ===================== PIN SETUP =====================
-// Tentukan pin yang digunakan untuk potensiometer dan LED PWM
-const int potPin = A0;   // isi dengan pin analog (contoh A0)
-const int ledPin = 9;   // isi dengan pin digital PWM (contoh 9)
+#define DHTPIN 2
+#define DHTTYPE DHT11
 
-// ===================== VARIABEL =====================
-// Variabel untuk menyimpan hasil pembacaan dan konversi PWM
-int nilaiADC = 0;  // isi dengan nilai awal (default 0)
-int pwm = 0;       // isi dengan nilai awal (default 0)
+DHT dht(DHTPIN, DHTTYPE);
+
+struct readings {
+  float temp;
+  float hum;
+};
+
+QueueHandle_t my_queue;
+
+void read_data(void *pvParameters) {
+  struct readings data;
+  while(1) {
+    data.temp = dht.readTemperature();
+    data.hum = dht.readHumidity();
+    xQueueSend(my_queue, &data, portMAX_DELAY);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+  }
+}
+
+void display_data(void *pvParameters) {
+  struct readings data;
+  while(1) {
+    if(xQueueReceive(my_queue, &data, portMAX_DELAY) == pdPASS) {
+      Serial.print("Suhu : ");
+      Serial.print(data.temp);
+      Serial.println(" C");
+      Serial.print("Kelembaban : ");
+      Serial.print(data.hum);
+      Serial.println(" %");
+    }
+  }
+}
 
 void setup() {
-
-  // ===================== OUTPUT SETUP =====================
-  // Atur pin LED sebagai output
-  pinMode(ledPin, );
-
-  // ===================== SERIAL MONITOR =====================
-  // Aktifkan komunikasi serial untuk melihat data pembacaan
-  Serial.begin(9600); // isi baud rate (contoh 9600)
+  Serial.begin(9600);
+  dht.begin();
+  my_queue = xQueueCreate(5, sizeof(struct readings));
+  xTaskCreate(read_data, "read", 128, NULL, 1, NULL);
+  xTaskCreate(display_data, "display", 128, NULL, 1, NULL);
 }
-
-void loop() {
-
-  // ===================== PEMBACAAN SENSOR =====================
-  // Baca nilai analog dari potensiometer (rentang 0–1023)
-  nilaiADC = analogRead(potPin); // isi dengan potPin
-
-  // ===================== PEMROSESAN DATA (SCALING) =====================
-  // Ubah nilai ADC (0–1023) menjadi nilai PWM (0–255)
-  pwm = map(nilaiADC,
-            0,   // isi nilai minimum ADC
-            1023,   // isi nilai maksimum ADC
-            0,   // isi PWM minimum
-            255);  // isi PWM maksimum
-
-  // ===================== OUTPUT PWM =====================
-  if (pwm >= 50 && pwm <= 200){ //ketika nilai pwm 50-200
-  	analogWrite(ledPin, pwm);   // led menyala sesuai pwm
-  } else {
-	analogWrite(ledPin, 0);       // led mati 
-  }
-
-  // ===================== MONITORING DATA =====================
-  // Tampilkan data ADC dan PWM ke Serial Monitor
-  Serial.print("ADC: ");
-  Serial.print(nilaiADC); // isi variabel ADC
-
-  Serial.print(" | PWM: ");
-  Serial.println(pwm); // isi variabel PWM
-
-  // ===================== STABILISASI SISTEM =====================
-  // Delay untuk menstabilkan pembacaan dan tampilan data
-  delay(50); // isi dalam milidetik (contoh 50)
-}
+void loop() {}
 ```
 
 ## Dokumentasi
