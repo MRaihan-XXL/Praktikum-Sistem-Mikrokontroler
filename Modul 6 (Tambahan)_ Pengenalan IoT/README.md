@@ -30,7 +30,7 @@
 > - Analisis perubahan perilaku LED yang terjadi pada setiap mode
 > - Sertakan source code dan penjelasan program dalam bentuk README.md
 
-> A. Mode RISING (interrupt dipicu saat tombol dilepaskan)
+A. Mode RISING (interrupt dipicu saat tombol dilepaskan)
 ```c++
 // Percobaan 6A - Mode RISING: LED berubah saat tombol DILEPASKAN
 #include <Arduino.h>
@@ -60,7 +60,7 @@ void loop() {
 > - Pada konfigurasi INPUT_PULLUP, saat tombol ditekan pin menjadi LOW, saat dilepaskan kembali HIGH.
 > - Jadi interrupt terjadi saat jari melepas tombol, bukan saat menekan dan LED akan berubah kondisi setelah tombol dilepaskan.
 
-> B. Mode CHANGE (interrupt dipicu setiap kali pin berubah, baik tekan maupun lepas)
+B. Mode CHANGE (interrupt dipicu setiap kali pin berubah, baik tekan maupun lepas)
 ```c++
 // Percobaan 6A - Mode CHANGE: LED berubah SETIAP KALI pin berubah (tekan & lepas)
 #include <Arduino.h>
@@ -89,7 +89,7 @@ void loop() {
 > - Dalam satu kali siklus tekan+lepas, interrupt terjadi dua kali, sehingga LED akan berubah nyala/mati dua kali (kembali ke kondisi awal).
 > - Akibatnya, LED mungkin tampak tidak berubah setelah satu kali tekan dan lepas, atau berubah dengan cepat dua kali.
 
-> C. Mode LOW (interrupt dipicu terus menerus selama pin dalam keadaan LOW)
+C. Mode LOW (interrupt dipicu terus menerus selama pin dalam keadaan LOW)
 ```c++
 // Percobaan 6A - Mode LOW: interrupt dipicu TERUS-MENERUS selama tombol ditekan
 #include <Arduino.h>
