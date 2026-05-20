@@ -2,118 +2,124 @@
 
 ## 6.5.4 Percobaan 6A: External Interrupt (Kendali LED dengan Tombol)
 
-1. Apakah ketiga task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
+1. Jelaskan proses bagaimana tombol dapat mengubah kondisi LED menggunakan interrupt!
 
-> Ketiga task berjalan secara bergantian (concurrent), bukan bersamaan (paralel murni) karena Arduino Uno hanya memiliki satu inti prosesor. Mekanismenya diatur oleh scheduler FreeRTOS. Scheduler membagi waktu prosesor secara bergantian ke setiap task dalam waktu yang sangat singkat. Ketika suatu task memanggil vTaskDelay(), task tersebut masuk ke status blocked dan scheduler langsung beralih ke task lain yang siap berjalan. Karena pergantian task terjadi sangat cepat, efeknya terlihat seolah semua task berjalan bersamaan.
-> 
-> Pada program ini, ketiga task memiliki prioritas yang sama (prioritas 1). Scheduler menggunakan skema round‑robin dengan time slicing, sehingga setiap task mendapat jatah waktu eksekusi secara bergantian.
+> - JTombol dihubungkan ke pin 2 dengan mode INPUT_PULLUP. Saat tombol tidak ditekan, pin 2 membaca HIGH (karena terhubung ke 5V via resistor internal). Saat tombol ditekan, pin 2 terhubung ke GND sehingga membaca LOW → terjadi transisi dari HIGH ke LOW (falling edge).
+> - Interrupt dengan mode FALLING sudah didaftarkan menggunakan attachInterrupt(). Ketika transisi tersebut terdeteksi, mikrokontroler langsung menghentikan program utama (loop()) dan melompat ke fungsi ISR (tombolInterrupt()).
+> - Di dalam ISR, variabel ledState dibalik nilainya (!ledState). Setelah ISR selesai, program utama dilanjutkan.
+> - Di loop(), nilai ledState terus ditulis ke pin LED (13 dan 12). Karena ISR mengubah ledState setiap tombol ditekan, LED berubah nyala/mati secara instan.
 
 
-2. Mengapa diperlukan fungsi map() dalam program tersebut?
+2. Apa fungsi attachInterrupt() pada program tersebut?
 
-> Langkah menambahkan task keempat:
-> 1. Deklarasikan fungsi task baru, misal void TaskBaru(void *pvParameters).
-> 2. Definisikan fungsi tersebut di bawah loop() dengan infinite loop while(1) dan vTaskDelay().
-> 3. Di dalam setup(), panggil xTaskCreate(TaskBaru, "task4", 128, NULL, 1, NULL).
-> 4. Pastikan stack size (128) cukup untuk task baru. Jika tidak, tingkatkan (misal 256).
-> 5. Upload ulang program.
-> 
-> Contoh task keempat untuk menyalakan LED di pin 6 setiap 700 ms:
+> Fungsi attachInterrupt() digunakan untuk menghubungkan pin interrupt dengan fungsi ISR serta menentukan mode pemicu. Format: attachInterrupt(digitalPinToInterrupt(pin), ISR, mode). Pada program, digitalPinToInterrupt(2) mengonversi pin 2 menjadi nomor interrupt 0, tombolInterrupt adalah nama fungsi ISR, dan FALLING adalah mode pemicu (tekan tombol).
+
+
+3. Mengapa pada ISR tidak disarankan menggunakan delay() dan Serial.print()?
+
+> ISR harus dieksekusi sesingkat mungkin karena selama ISR berjalan, interrupt lain ditunda dan program utama tidak berjalan. delay() akan menghentikan ISR terlalu lama, menyebabkan sistem tidak responsif bahkan bisa melewatkan interrupt lain. Serial.print() juga lambat karena menunggu pengiriman data serial, dan jika di dalam ISR dapat menyebabkan konflik dengan komunikasi serial utama. Prinsip ISR: hanya untuk tugas yang sangat cepat, seperti mengubah variabel atau menandai flag.
+
+
+4. Apa fungsi keyword volatile pada variabel ledState?
+
+> Keyword volatile memberitahu compiler bahwa nilai variabel dapat berubah kapan saja di luar alur normal program, khususnya oleh ISR yang dijalankan secara asinkron. Tanpa volatile, compiler dapat mengoptimalkan kode dengan menganggap nilai variabel tidak pernah berubah di loop(), sehingga perubahan dari ISR tidak terlihat. Dengan volatile, compiler selalu membaca nilai variabel dari memori setiap kali digunakan.
+
+
+5. Pada percobaan digunakan mode interrupt FALLING. Modifikasikan program menggunakan mode interrupt lain (RISING, CHANGE, atau LOW) kemudian:
+> - Jelaskan perbedaan cara kerja masing-masing mode interrupt tersebut
+> - Analisis perubahan perilaku LED yang terjadi pada setiap mode
+> - Sertakan source code dan penjelasan program dalam bentuk README.md
+
+> A. Mode RISING (interrupt dipicu saat tombol dilepaskan)
 ```c++
-void TaskBaru(void *pvParameters) {
-  pinMode(6, OUTPUT);
-  while(1) {
-    digitalWrite(6, HIGH);
-    vTaskDelay(700 / portTICK_PERIOD_MS);
-    digitalWrite(6, LOW);
-    vTaskDelay(700 / portTICK_PERIOD_MS);
-  }
+// Percobaan 6A - Mode RISING: LED berubah saat tombol DILEPASKAN
+#include <Arduino.h>
+
+volatile bool ledState = false;  // status LED (volatile karena diubah di ISR)
+
+// ISR: dipanggil saat terjadi transisi LOW → HIGH (tombol dilepaskan)
+void tombolInterrupt() {
+    ledState = !ledState;        // balik status LED
 }
-```
-
-
-3. Modifikasilah program dengan menambah sensor (misalnya potensiometer), lalu gunakan nilainya untuk mengontrol kecepatan LED! Bagaimana hasilnya? Jelaskan program pada file README.md.
-
-```c++
-#include <Arduino_FreeRTOS.h>
-
-void TaskBlink1(void *pvParameters);
-void TaskBlink2(void *pvParameters);
-void Taskprint(void *pvParameters);
-void TaskPot(void *pvParameters);
-
-const int ledPin1 = 8;   // LED merah (kecepatan dikontrol potensio)
-const int ledPin2 = 7;   // LED kuning
-const int potPin = A0;   // potensiometer
-
-int potValue = 0;
-int delayTime = 200;      // delay default (ms)
 
 void setup() {
-  Serial.begin(9600);
-  
-  // Membuat 4 task dengan prioritas sama (1)
-  xTaskCreate(TaskBlink1, "task1", 128, NULL, 1, NULL);
-  xTaskCreate(TaskBlink2, "task2", 128, NULL, 1, NULL);
-  xTaskCreate(Taskprint,  "task3", 128, NULL, 1, NULL);
-  xTaskCreate(TaskPot,    "task4", 128, NULL, 1, NULL);
-  
-  vTaskStartScheduler();   // Mulai RTOS scheduler
+    pinMode(13, OUTPUT);
+    pinMode(12, OUTPUT);
+    pinMode(2, INPUT_PULLUP);    // pull-up internal, pin HIGH saat tidak ditekan
+    
+    // Pasang interrupt pada pin 2, mode RISING (LOW → HIGH)
+    attachInterrupt(digitalPinToInterrupt(2), tombolInterrupt, RISING);
 }
 
 void loop() {
-  // Kosong – semua eksekusi ditangani oleh scheduler
-}
-
-// Task 1: LED merah (pin 8) – kecepatan mengikuti potensiometer
-void TaskBlink1(void *pvParameters) {
-  pinMode(ledPin1, OUTPUT);
-  while (1) {
-    digitalWrite(ledPin1, HIGH);
-    vTaskDelay(delayTime / portTICK_PERIOD_MS);
-    digitalWrite(ledPin1, LOW);
-    vTaskDelay(delayTime / portTICK_PERIOD_MS);
-    Serial.print("Task1 delay: ");
-    Serial.println(delayTime);
-  }
-}
-
-// Task 2: LED kuning (pin 7) – kecepatan 2× lebih lambat dari LED merah
-void TaskBlink2(void *pvParameters) {
-  pinMode(ledPin2, OUTPUT);
-  while (1) {
-    digitalWrite(ledPin2, HIGH);
-    vTaskDelay(2 * delayTime / portTICK_PERIOD_MS);
-    digitalWrite(ledPin2, LOW);
-    vTaskDelay(2 * delayTime / portTICK_PERIOD_MS);
-  }
-}
-
-// Task 3: Mencetak counter setiap 500ms (untuk monitoring)
-void Taskprint(void *pvParameters) {
-  int counter = 0;
-  while (1) {
-    counter++;
-    Serial.print("Counter: ");
-    Serial.println(counter);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-}
-
-// Task 4: Membaca potensiometer dan mengupdate delayTime
-void TaskPot(void *pvParameters) {
-  while (1) {
-    potValue = analogRead(A0);
-    // Mapping nilai ADC 0-1023 ke delay 100ms – 1000ms
-    delayTime = map(potValue, 0, 1023, 100, 1000);
-	
-    vTaskDelay(100 / portTICK_PERIOD_MS);   // update setiap 100ms
-  }
+    digitalWrite(13, ledState);
+    digitalWrite(12, ledState);
 }
 ```
+> - Mode RISING mendeteksi perubahan tegangan dari LOW (0V) ke HIGH (5V).
+> - Pada konfigurasi INPUT_PULLUP, saat tombol ditekan pin menjadi LOW, saat dilepaskan kembali HIGH.
+> - Jadi interrupt terjadi saat jari melepas tombol, bukan saat menekan dan LED akan berubah kondisi setelah tombol dilepaskan.
+
+> B. Mode CHANGE (interrupt dipicu setiap kali pin berubah, baik tekan maupun lepas)
+```c++
+// Percobaan 6A - Mode CHANGE: LED berubah SETIAP KALI pin berubah (tekan & lepas)
+#include <Arduino.h>
+
+volatile bool ledState = false;
+
+void tombolInterrupt() {
+    ledState = !ledState;        // balik status setiap kali ada perubahan
+}
+
+void setup() {
+    pinMode(13, OUTPUT);
+    pinMode(12, OUTPUT);
+    pinMode(2, INPUT_PULLUP);
+    
+    // Pasang interrupt pada pin 2, mode CHANGE (setiap perubahan HIGH↔LOW)
+    attachInterrupt(digitalPinToInterrupt(2), tombolInterrupt, CHANGE);
+}
+
+void loop() {
+    digitalWrite(13, ledState);
+    digitalWrite(12, ledState);
+}
+```
+> - Mode CHANGE memicu interrupt pada setiap transisi, baik dari HIGH→LOW (tekan) maupun LOW→HIGH (lepas).
+> - Dalam satu kali siklus tekan+lepas, interrupt terjadi dua kali, sehingga LED akan berubah nyala/mati dua kali (kembali ke kondisi awal).
+> - Akibatnya, LED mungkin tampak tidak berubah setelah satu kali tekan dan lepas, atau berubah dengan cepat dua kali.
+
+> C. Mode LOW (interrupt dipicu terus menerus selama pin dalam keadaan LOW)
+```c++
+// Percobaan 6A - Mode LOW: interrupt dipicu TERUS-MENERUS selama tombol ditekan
+#include <Arduino.h>
+
+volatile bool ledState = false;
+
+void tombolInterrupt() {
+    ledState = !ledState;        // akan dipanggil berulang kali saat tombol ditekan
+}
+
+void setup() {
+    pinMode(13, OUTPUT);
+    pinMode(12, OUTPUT);
+    pinMode(2, INPUT_PULLUP);
+    
+    // Pasang interrupt pada pin 2, mode LOW (selama pin LOW, ISR terus dipanggil)
+    attachInterrupt(digitalPinToInterrupt(2), tombolInterrupt, LOW);
+}
+
+void loop() {
+    digitalWrite(13, ledState);
+    digitalWrite(12, ledState);
+}
+```
+> - Mode LOW menyebabkan interrupt terjadi terus‑menerus selama pin dalam keadaan LOW (tombol ditekan).
+> - ISR akan dipanggil berkali‑kali (bukan sekali), sehingga LED akan berubah kondisi sangat cepat (berkedip) selama tombol masih ditekan.
+> - Tidak stabil untuk aplikasi saklar on/off biasa; lebih cocok untuk deteksi tombol tahan (hold).
 
 
-## 6.6.4 Percobaan 5B: Komunikasi Task dengan Queue
+## 6.6.4 Percobaan 6B: Timer Menggunakan millis() (LED Blinking Non‑Blocking)
 
 1. Apakah kedua task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
 
