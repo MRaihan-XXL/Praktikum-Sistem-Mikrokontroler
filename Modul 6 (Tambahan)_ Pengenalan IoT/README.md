@@ -1,6 +1,6 @@
-# Pertemuan 5
+# Pertemuan 6
 
-## 5.5.4 Percobaan 5A: Multitasking dengan FreeRTOS (LED + Potensiometer)
+## 6.5.4 Percobaan 6A: External Interrupt (Kendali LED dengan Tombol)
 
 1. Apakah ketiga task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
 
@@ -113,7 +113,7 @@ void TaskPot(void *pvParameters) {
 ```
 
 
-## 5.6.4 Percobaan 5B: Komunikasi Task dengan Queue
+## 6.6.4 Percobaan 5B: Komunikasi Task dengan Queue
 
 1. Apakah kedua task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
 
@@ -196,9 +196,10 @@ void display(void *pvParameters){
 
 1. Percobaan 5A: Multitasking dengan FreeRTOS (LED + Potensiometer)
 
-![Percobaan 5A](Dokumentasi_Percobaan_5A.jpg)
+![Percobaan 5A](Dokumentasi_Percobaan_6A.jpg)
 
 2. Percobaan 5B: Komunikasi Task dengan Queue
 
-![Percobaan 5B](Dokumentasi_Percobaan_5B.jpg)
-![Hasil Output 5B](Dokumentasi_Output_Percobaan_5B.png)
+![Percobaan 5B](Dokumentasi_Percobaan_6B.jpg)
+![Hasil Output 5B](Hasil_Dokumentasi_Percobaan_6B.png )
+
