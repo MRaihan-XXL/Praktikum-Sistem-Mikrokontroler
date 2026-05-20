@@ -118,83 +118,59 @@ void loop() {
 > - ISR akan dipanggil berkali‑kali (bukan sekali), sehingga LED akan berubah kondisi sangat cepat (berkedip) selama tombol masih ditekan.
 > - Tidak stabil untuk aplikasi saklar on/off biasa; lebih cocok untuk deteksi tombol tahan (hold).
 
->
+
 ## 6.6.4 Percobaan 6B: Timer Menggunakan millis() (LED Blinking Non‑Blocking)
 
-1. Apakah kedua task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
+1. Jelaskan bagaimana fungsi millis() bekerja pada program tersebut!
 
-> Sama seperti percobaan 5A, kedua task (read_data dan display) berjalan secara bergantian (concurrent) di bawah pengelolaan scheduler FreeRTOS. Task read_data mengirim data ke queue, lalu vTaskDelay(100) menyebabkan task tersebut blocked selama 100 ms, sehingga scheduler beralih ke task display. Task display menunggu data dari queue dengan xQueueReceive(..., portMAX_DELAY). Jika queue kosong, task display juga blocked. Ketika read_data mengirim data, queue menjadi tidak kosong, maka task display di‑unblock dan langsung menampilkan data. Setelah selesai, scheduler dapat beralih lagi ke task lain.
-
-
-2. Apakah program ini berpotensi mengalami race condition? Jelaskan!
-
-> Program ini tidak berpotensi mengalami race condition karena queue FreeRTOS sudah dirancang sebagai mekanisme komunikasi antar task yang thread‑safe. Race condition terjadi ketika dua task mengakses sumber daya bersama secara bersamaan tanpa sinkronisasi. Pada program queue:
-> 1. xQueueSend dan xQueueReceive adalah fungsi yang aman (dilindungi oleh critical section internal FreeRTOS).
-> 2. Data dikirim melalui queue (by copy), bukan by reference, sehingga tidak ada akses langsung ke variabel yang sama.
-Jika dua task mencoba mengirim ke queue secara bersamaan, mekanisme internal queue akan menjadwalkan akses secara berurutan.
+> millis() mengembalikan jumlah milidetik sejak Arduino dinyalakan (atau di‑reset). Nilai kembali adalah unsigned long (0 hingga ~50 hari). Program menyimpan waktu terakhir LED berubah di variabel previousMillis. Setiap loop(), currentMillis = millis(). Jika selisih currentMillis - previousMillis >= interval (1000 ms), maka sudah waktunya mengubah status LED. Ini adalah metode non‑blocking.
 
 
-3. Modifikasilah program dengan menggunakan sensor DHT sesungguhnya sehingga informasi yang ditampilkan dinamis. Bagaimana hasilnya? Jelaskan program pada file README.md.
+2. Apa perbedaan utama antara delay() dan millis()?
 
-> Hasil modifikasi (menggunakan sensor DHT11) menghasilkan pembacaan suhu dan kelembaban secara dinamis sesuai kondisi lingkungan. Program:
+| delay()                    | millis()                    |
+| -------------------------- | --------------------------- |
+| Blocking: program berhenti total selama waktu yang ditentukan.        | Non‑blocking: program terus berjalan, hanya mengecek waktu.      |
+| Mudah digunakan untuk satu tugas.| Cocok untuk multitasking sederhana.      |
+| Tidak dapat menjalankan tugas lain selama jeda.   | Dapat menjalankan banyak tugas periodik sekaligus. |
+
+
+3. Mengapa metode millis() disebut non-blocking
+
+> Karena program tidak berhenti menunggu. Di dalam loop(), eksekusi terus berjalan, hanya pada setiap iterasi dicek apakah sudah mencapai interval. Selama belum mencapai interval, program bebas melakukan pekerjaan lain (misal membaca sensor, mengirim data, dll.). Tidak ada perintah yang menghentikan aliran program secara paksa seperti delay().
+
+
+
+4. M4. Modifikasi program agar:
+> - LED pertama berkedip setiap 1 detik
+> - LED kedua berkedip setiap 500 ms
+> - Tanpa menggunakan delay()
 
 ```c++
-#include <Arduino_FreeRTOS.h>   
-#include <queue.h>              
-#include <DHT.h>                
+#include <Arduino.h>
 
-#define DHTPIN 2                // Pin data sensor DHT terhubung ke pin 2 Arduino
-#define DHTTYPE DHT11           // Tipe sensor: DHT11 (bisa diganti DHT22)
+unsigned long previousMillis = 0; // waktu terakhir LED berubah
 
-DHT dht(DHTPIN, DHTTYPE);       // Buat objek DHT
+const long interval = 1000; // interval kedip: 1000 ms
 
-struct readings {
-  float temp;               // Suhu dalam derajat Celcius
-  float h;         		    // Kelembaban dalam persen (%)
-};
-
-QueueHandle_t my_queue;         // Handle queue (antar task)
-
-void read_data(void *pvParameters);   // Task membaca data dari DHT
-void display(void *pvParameters);    // Task menampilkan data ke Serial Monitor
+bool ledState = false; // status LED saat ini
 
 void setup() {
-  Serial.begin(9600);           // Mulai komunikasi serial (untuk output)
-  
-  dht.begin();                  // Inisialisasi sensor DHT
-
-  my_queue = xQueueCreate(1, sizeof(struct readings));
-
-  // Buat task pembaca sensor
-  xTaskCreate(read_data, "BacaSensor", 128, NULL, 1, NULL);
-  // Buat task penampil data 
-  xTaskCreate(display, "Tampilkan", 128, NULL, 1, NULL);
+    pinMode(13, OUTPUT);
+    pinMode(6, OUTPUT);  // Pin 13 dan pin 6 sebagai output
 }
 
 void loop() {
-  // Kosong - semua eksekusi dikelola oleh scheduler FreeRTOS
-}
+    // Ambil waktu saat ini
+    unsigned long currentMillis = millis();
 
-void display(void *pvParameters){
-  struct readings data;         // Variabel lokal untuk menyimpan data sementara
-
-  for(;;){
-
-    // Ambil data dari queue. Jika queue kosong
-    if (xQueueReceive(my_queue, &data, portMAX_DELAY) == pdPASS) {
-
-      // Jika berhasil menerima data, tampilkan ke Serial Monitor
-      Serial.print("Suhu : ");
-      Serial.print(data.suhu);
-      Serial.println(" °C");
-
-      Serial.print("Kelembaban : ");
-      Serial.print(data.kelembaban);
-      Serial.println(" %");
-      
-      Serial.println("------------------------");
+    // Cek apakah sudah melewati interval
+    if(currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis; // simpan waktu terakhir
+        ledState = !ledState; // toggle status LED
+        digitalWrite(13, ledState);
+        digitalWrite(6, ledState);// tulis ke pin LED
     }
-  }
 }
 ```
 
