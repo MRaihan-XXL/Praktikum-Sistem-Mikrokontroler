@@ -118,7 +118,7 @@ void loop() {
 > - ISR akan dipanggil berkali‑kali (bukan sekali), sehingga LED akan berubah kondisi sangat cepat (berkedip) selama tombol masih ditekan.
 > - Tidak stabil untuk aplikasi saklar on/off biasa; lebih cocok untuk deteksi tombol tahan (hold).
 
-
+>
 ## 6.6.4 Percobaan 6B: Timer Menggunakan millis() (LED Blinking Non‑Blocking)
 
 1. Apakah kedua task berjalan secara bersamaan atau bergantian? Jelaskan mekanismenya!
