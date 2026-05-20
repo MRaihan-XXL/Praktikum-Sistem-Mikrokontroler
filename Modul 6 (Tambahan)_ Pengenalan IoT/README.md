@@ -176,12 +176,12 @@ void loop() {
 
 ## Dokumentasi
 
-1. Percobaan 5A: Multitasking dengan FreeRTOS (LED + Potensiometer)
+1. Percobaan 6A: External Interrupt (Kendali LED dengan Tombol)
 
-![Percobaan 5A](Dokumentasi_Percobaan_6A.jpg)
+![Percobaan 6A](Dokumentasi_Percobaan_6A.jpg)
 
-2. Percobaan 5B: Komunikasi Task dengan Queue
+2. Percobaan 6B: Timer Menggunakan millis() (LED Blinking Non‑Blocking)
 
-![Percobaan 5B](Dokumentasi_Percobaan_6B.jpg)
+![Percobaan 6B](Dokumentasi_Percobaan_6B.jpg)
 ![Hasil Output 5B](Hasil_Dokumentasi_Percobaan_6B.png )
 
